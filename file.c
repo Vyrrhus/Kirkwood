@@ -8,8 +8,8 @@
 #include "engine.h"
 
 /***** FILE NAME */
-static char* INPUT_BODIES     = "input_bodies.dat";
-static char* INPUT_ASTEROID   = "input_ast.dat";
+static char* INPUT_BODIES     = "input/saturn.dat";
+static char* INPUT_ASTEROID   = "input/asteroids.dat";
 static char* OUTPUT_FILENAME  = "output/%dMB_%drev_%dast.dat";
 static char* HIST_FILENAME    = "output/%dMB_%drev_%dast-hist.dat";
 
