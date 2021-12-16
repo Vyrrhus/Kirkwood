@@ -113,8 +113,8 @@ if elements:
     plt.suptitle("Semi-major axis [AU]")
     figE, axE = plt.subplots(k,1)
     plt.suptitle("Eccentricity")
-    figW, axW = plt.subplots(k,1, subplot_kw={'projection': 'polar'})
-    plt.suptitle("True longitude to perihelion [rad]")
+    # figW, axW = plt.subplots(k,1, subplot_kw={'projection': 'polar'})
+    # plt.suptitle("True longitude to perihelion [rad]")
 
 if hist:
     figHist, axHist = plt.subplots()
@@ -137,11 +137,11 @@ for obj in range(START,nbObjs):
     if elements and not recompute:
         axA.plot(data['time'], data['semi-major axis'][:,obj])
         axE.plot(data['time'], data['eccentricity'][:,obj])
-        axW.plot(data['time'], data['true longitude'][:,obj])
+        # axW.plot(data['time'], data['true longitude'][:,obj])
     if elements and recompute:
         axA[0].plot(data['time'], data['semi-major axis'][:,obj])
         axE[0].plot(data['time'], data['eccentricity'][:,obj])
-        axW[0].plot(data['time'], data['true longitude'][:,obj])
+        # axW[0].plot(data['time'], data['true longitude'][:,obj])
 
         # Recompute
         a,e = kepler( data['x'][:,obj] -  data['x'][:,0],
