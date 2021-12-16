@@ -131,6 +131,7 @@ if '--hist' in sys.argv:
         axR.set_xlabel('Periapsis [UA]')
         axR.set_ylabel('Apoapsis [UA]')
         axR.legend(loc='upper right')
+        axR.axis('equal')
 
 
     # a(w)
