@@ -6,7 +6,7 @@
 
 /***** FUNCTIONS */
 // Static functions
-Vector get_acceleration(Body body, int nbMajorBodies, Body listMajorBodies[]) {
+static Vector get_acceleration(Body body, int nbMajorBodies, Body listMajorBodies[]) {
     /*
      *  Compute the acceleration vector of a given body in a N-body system
      *  Main attractors are within listMajorBodies[]
