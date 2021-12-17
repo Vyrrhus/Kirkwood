@@ -8,6 +8,7 @@
     #define STEP_TIME       0.1
     #define STEP_WRITING    1.
     #define SAVE_BOOL       0       // True (1) or False (0)
+    #define SAVE_HIST       0       // Idem
 
     /***** ASTEROID SEMI MAJOR AXIS GENERATION */
     #define MIN_AST_GENERATION  1.6

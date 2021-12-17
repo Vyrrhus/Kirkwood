@@ -40,7 +40,10 @@ int main() {
     // Run simulation
     sun = run_simulation(&time, nbMajorBodies, majorBodies, asteroids);
 
-    save_hist(nbMajorBodies, sun, asteroids);
+    // Save initial and final Kepler elements for the asteroids
+    if (SAVE_HIST) {
+        save_hist(nbMajorBodies, sun, asteroids);
+    }
     
     return 0;
 }
