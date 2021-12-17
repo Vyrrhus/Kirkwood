@@ -26,6 +26,7 @@
     #define GM_CONVERSION   pow(YEAR_CONST,2) / pow(AU_CONST,3)
     #define JUPITER_YEAR    11.87
     #define STD_SUN         1.32712440018e+020 * GM_CONVERSION
+    #define RAD_CONVERSION  M_PI/180
 
     #define LENGTH_SIMULATION   JUPITER_YEAR * JUPITER_REV
     // #define LENGTH_SIMULATION   1 * STEP_TIME
@@ -33,7 +34,7 @@
 
     /***** STRUCTURES */
     typedef struct {
-        double x,y;
+        double x,y,z;
     } Vector;
 
     typedef struct {
@@ -43,7 +44,9 @@
         double std;
         double semiMajorAxis;
         double eccentricity;
-        double trueLongitude;
+        double inclination;
+        double longitudeAN;
+        double argPeriapsis;
     } Body;
 
 #endif

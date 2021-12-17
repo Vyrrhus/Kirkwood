@@ -14,7 +14,7 @@ from matplotlib import pyplot as plt
     --save :    save figs in ./img
 """
 
-FORMAT_FILE = "output/{}MB_{}rev_{}ast"
+FORMAT_FILE = "output3d/{}MB_{}rev_{}ast"
 HIST_LIM    = [1.2,4.8]
 
 # File name
