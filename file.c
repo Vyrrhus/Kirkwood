@@ -74,31 +74,50 @@ static Body init_major_bodies(int nbMajorBodies, Body listMajorBodies[]) {
         exit(EXIT_FAILURE);
     }
 
-    for (int i = 0 ; i < nbMajorBodies ; i++) {
-        fscanf(datafile, "%[^,],%lf,%lf,%lf,%lf,%lf",
-               &name,
-               &listMajorBodies[i].std,
-               &listMajorBodies[i].pos.x,
-               &listMajorBodies[i].pos.y,
-               &listMajorBodies[i].vel.x,
-               &listMajorBodies[i].vel.y);
-        
-        if (i != nbMajorBodies-1) {
-            fscanf(datafile, "\n");
+    // Sun is always the first line with format string:
+    // {name,std,x,y,z,vx,vy,vz}
+    fscanf(datafile, "%[^,],%lf,%lf,%lf,%lf,%lf,%lf,%lf\n",
+           &name,&listMajorBodies[0].std,
+           &listMajorBodies[0].pos.x,&listMajorBodies[0].pos.y,&listMajorBodies[0].pos.z,
+           &listMajorBodies[0].vel.x,&listMajorBodies[0].vel.y,&listMajorBodies[0].vel.z);
+    
+    listMajorBodies[0].semiMajorAxis = 0;
+    listMajorBodies[0].eccentricity  = 0;
+    listMajorBodies[0].inclination   = 0;
+    listMajorBodies[0].longitudeAN   = 0;
+    listMajorBodies[0].argPeriapsis  = 0;
+    listMajorBodies[0].std          *= GM_CONVERSION;
+    listMajorBodies[0].acc           = null;
         }
 
-        listMajorBodies[i].acc           = null;
-        listMajorBodies[i].std          *= GM_CONVERSION;
-        listMajorBodies[i].semiMajorAxis = 0;
-        listMajorBodies[i].eccentricity  = 0;
-        listMajorBodies[i].trueLongitude = 0;
-        listMajorBodies[i].isTooFar      = 0;
-
-        if (listMajorBodies[i].std == STD_SUN) {
-            sun = listMajorBodies[i];
-        }
+    // Check if Sun is well declared
+    sun = listMajorBodies[0];
+    if (sun.std != STD_SUN) {
+        exit(EXIT_FAILURE);
     }
 
+    // Other major bodies follow with format string:
+    // {name, std, a, e, i, W, w}
+    for (int i = 1 ; i < nbMajorBodies ; i++) {
+        fscanf(datafile, "%[^,],%lf,%lf,%lf,%lf,%lf,%lf\n",
+               &name,
+               &listMajorBodies[i].std,
+               &listMajorBodies[i].semiMajorAxis,
+               &listMajorBodies[i].eccentricity,
+               &listMajorBodies[i].inclination,
+               &listMajorBodies[i].longitudeAN,
+               &listMajorBodies[i].argPeriapsis);
+
+        listMajorBodies[i].inclination  *= RAD_CONVERSION;
+        listMajorBodies[i].longitudeAN  *= RAD_CONVERSION;
+        listMajorBodies[i].argPeriapsis *= RAD_CONVERSION;
+        listMajorBodies[i].std          *= GM_CONVERSION;
+        listMajorBodies[i].acc           = null;
+
+        state_from_kepler(sun, &listMajorBodies[i]);
+
+        }
+    }
     return sun;
 };
 
