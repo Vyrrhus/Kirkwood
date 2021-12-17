@@ -126,7 +126,7 @@ Body yoshida(int nbMajorBodies, Body listMajorBodies[], Body listAsteroids[], do
     for (int step = 0 ; step < 4 ; step++) {
         // Position
         for (int i = 0 ; i < ASTEROID_NUMBER ; i++) {
-            if (listAsteroids[i].isTooFar) {
+            if (listAsteroids[i].semiMajorAxis >= SMA_MAX_VALUE || listAsteroids[i].eccentricity >= ECC_MAX_VALUE) {
                 continue;
             }
             listAsteroids[i].pos.x += c[step] * listAsteroids[i].vel.x * dT;
@@ -144,7 +144,7 @@ Body yoshida(int nbMajorBodies, Body listMajorBodies[], Body listAsteroids[], do
 
         // Velocity and acceleration
         for (int i = 0 ; i < ASTEROID_NUMBER ; i++) {
-            if (listAsteroids[i].isTooFar) {
+            if (listAsteroids[i].semiMajorAxis > SMA_MAX_VALUE || listAsteroids[i].eccentricity >= ECC_MAX_VALUE) {
                 continue;
             }
             acc = get_acceleration(listAsteroids[i], nbMajorBodies, listMajorBodies);

@@ -42,8 +42,6 @@ static void init_asteroid(Body sun, Body listAsteroid[]) {
                &listAsteroid[i].trueLongitude);
         state_from_kepler(sun, &listAsteroid[i]);
         listAsteroid[i].acc = null;
-        listAsteroid[i].isTooFar = 0;
-
         // printf("   {%d} : a : %g\n", i, listAsteroid[i].semiMajorAxis);
         // printf("         e : %g\n", listAsteroid[i].eccentricity);
         // printf("         w : %g\n", listAsteroid[i].trueLongitude);

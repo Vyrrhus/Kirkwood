@@ -15,6 +15,11 @@
     #define MAX_AST_GENERATION  5.2
     #define RESET_ASTEROID_INPUT 1     // True (1) or False (0)
 
+    /***** DELETE CONDITIONS */
+    // Asteroids with Kepler elements greater than these won't be computed anymore
+    #define SMA_MAX_VALUE   15
+    #define ECC_MAX_VALUE   1
+
     /***** ALIAS */
     #define AU_CONST        149597870700
     #define YEAR_CONST      86400 * 365.2524
@@ -32,7 +37,6 @@
     } Vector;
 
     typedef struct {
-        int isTooFar;
         Vector pos;
         Vector vel;
         Vector acc;
