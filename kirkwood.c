@@ -70,8 +70,7 @@ static Body run_simulation(double *time, int nbMajorBodies, Body listMajorBodies
            stop  = 1;
        }
 
-       // Iteration
-    //    sun = leapfrog(nbMajorBodies, listMajorBodies, listAsteroids, (double) STEP_TIME);
+       // Iteration (choose either leapfrog or yoshida)
        sun = yoshida(nbMajorBodies, listMajorBodies, listAsteroids, (double) STEP_TIME);
 
        // Save data

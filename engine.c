@@ -21,27 +21,15 @@ static Vector get_acceleration(Body body, int nbMajorBodies, Body listMajorBodie
     double r2;
     double a;
 
-    // printf("   => FUNCTION\n");
-    // printf("      Acc ini = {%g ; %g}\n", acceleration.x, acceleration.y);
-    // printf("      Nb major bodies : {%d}\n", nbMajorBodies);
-    // printf("      Position : {%g ; %g}\n", body.pos.x, body.pos.y);
-
     for (int i = 0 ; i < nbMajorBodies ; i++) {
         relativePosition.x = body.pos.x - listMajorBodies[i].pos.x;
         relativePosition.y = body.pos.y - listMajorBodies[i].pos.y;
-        // printf("      =Body {%d} :  position {%g ; %g}\n",i, listMajorBodies[i].pos.x, listMajorBodies[i].pos.y);
-        // printf("                   relative {%g ; %g}\n", relativePosition.x, relativePosition.y);
-        // printf("                   std para {%g}\n", listMajorBodies[i].std);
         r2 = relativePosition.x * relativePosition.x + relativePosition.y * relativePosition.y;
         a  = listMajorBodies[i].std / (r2 * sqrt(r2));
-        // printf("                   r2 = %g\n", r2);
-        // printf("                   a  = %g\n", a);
 
         if (r2 != 0) {
             acceleration.x -= relativePosition.x * a;
             acceleration.y -= relativePosition.y * a;
-                    // printf("                   accelera {%g ; %g}\n",acceleration.x, acceleration.y);
-
         }
     }
 
@@ -56,52 +44,28 @@ Body leapfrog(int nbMajorBodies, Body listMajorBodies[], Body listAsteroids[], d
     Vector acc = {0, 0};
     Body sun;
 
-    // printf("\nLEAPFROG\n");
-
     // Position at t+dt
-    // printf("ASTEROIDS\n");
     for (int i = 0 ; i < ASTEROID_NUMBER ; i++) {
-        // printf("%d : %g, %g\n", i, listAsteroids[i].pos.x, listAsteroids[i].pos.y);
-        // printf("---- %g, %g\n", listAsteroids[i].vel.x, listAsteroids[i].vel.y);
-        // printf("---- %g, %g\n", listAsteroids[i].acc.x, listAsteroids[i].acc.y);
-
         listAsteroids[i].pos.x += listAsteroids[i].vel.x * dT + 0.5 * listAsteroids[i].acc.x * dT * dT;
         listAsteroids[i].pos.y += listAsteroids[i].vel.y * dT + 0.5 * listAsteroids[i].acc.y * dT * dT;
-        // printf("=new: %g, %g\n", listAsteroids[i].pos.x, listAsteroids[i].pos.y);
     }
-    // printf("MAJOR BODIES\n");
     for (int i = 0 ; i < nbMajorBodies ; i++) {
-        // printf("%d : %g, %g\n", i, listMajorBodies[i].pos.x, listMajorBodies[i].pos.y);
-        // printf("---- %g, %g\n", listMajorBodies[i].vel.x, listMajorBodies[i].vel.y);
-        // printf("---- %g, %g\n", listMajorBodies[i].acc.x, listMajorBodies[i].acc.y);
-
         listMajorBodies[i].pos.x += listMajorBodies[i].vel.x * dT + 0.5 * listMajorBodies[i].acc.x * dT * dT;
         listMajorBodies[i].pos.y += listMajorBodies[i].vel.y * dT + 0.5 * listMajorBodies[i].acc.y * dT * dT;
-        // printf("=new: %g, %g\n", listMajorBodies[i].pos.x, listMajorBodies[i].pos.y);
     }
 
     // Velocity and acceleration at t+dt
-    // printf("ASTEROIDS\n");
     for (int i = 0 ; i < ASTEROID_NUMBER ; i++) {
-        // printf("== nb {%d}", i);
         acc = get_acceleration(listAsteroids[i], nbMajorBodies, listMajorBodies);
-        // printf("%d : %g, %g\n", i, listAsteroids[i].vel.x, listAsteroids[i].vel.y);
-        // printf("   acc: {%g ; %g}\n", acc.x, acc.y);
         listAsteroids[i].vel.x += 0.5 * (listAsteroids[i].acc.x + acc.x) * dT;
         listAsteroids[i].vel.y += 0.5 * (listAsteroids[i].acc.y + acc.y) * dT;
         listAsteroids[i].acc = acc;
-        // printf("---- %g, %g\n", listAsteroids[i].vel.x, listAsteroids[i].vel.y);
     }
-    // printf("MAJOR BODIES\n");
     for (int i = 0 ; i < nbMajorBodies ; i++) {
-        // printf("== nb {%d}", i);
         acc = get_acceleration(listMajorBodies[i], nbMajorBodies, listMajorBodies);
-        // printf("%d : %g, %g\n", i, listMajorBodies[i].vel.x, listMajorBodies[i].vel.y);
-        // printf("   acc: {%g ; %g}\n", acc.x, acc.y);
         listMajorBodies[i].vel.x += 0.5 * (listMajorBodies[i].acc.x + acc.x) * dT;
         listMajorBodies[i].vel.y += 0.5 * (listMajorBodies[i].acc.y + acc.y) * dT;
         listMajorBodies[i].acc = acc;
-        // printf("---- %g, %g\n", listMajorBodies[i].vel.x, listMajorBodies[i].vel.y);
 
         if (listMajorBodies[i].std == STD_SUN) {
             sun = listMajorBodies[i];
@@ -175,11 +139,6 @@ void kepler_from_state(Body sun, Body *body) {
     double a, e, w, energy;
     double sunStdParameter = (double) STD_SUN;
 
-    // printf("BODY STD : {%g}\n", body->std);
-    // printf("     pos: {%g ; %g}\n", body->pos.x, body->pos.y);
-    // printf("     vel: {%g ; %g}\n", body->vel.x, body->vel.y);
-
-
     // Relative state vectors to the Sun
     Vector relPos = {body->pos.x - sun.pos.x, 
                      body->pos.y - sun.pos.y};
@@ -190,9 +149,6 @@ void kepler_from_state(Body sun, Body *body) {
     double r2 = relPos.x * relPos.x + relPos.y * relPos.y;
     double v2 = relVel.x * relVel.x + relVel.y * relVel.y;
 
-    // printf("== r2 = %g\n", r2);
-    // printf("SUN pos: {%g ; %g}\n", sun.pos.x, sun.pos.y);
-    // printf("BODYpos: {%g ; %g}\n", body->pos.x, body->pos.y);
     // Sun
     if (r2 == 0) {
         return;
@@ -237,9 +193,6 @@ void kepler_from_state(Body sun, Body *body) {
             body->isTooFar = 1;
     }
 
-    // printf("       a: {%g}\n", body->semiMajorAxis);
-    // printf("       e: {%g}\n", body->eccentricity);
-    // printf("       w: {%g}\n", body->trueLongitude);
 
 };
 void state_from_kepler(Body sun, Body *body) {

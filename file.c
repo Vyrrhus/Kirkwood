@@ -42,21 +42,6 @@ static void init_asteroid(Body sun, Body listAsteroid[]) {
                &listAsteroid[i].trueLongitude);
         state_from_kepler(sun, &listAsteroid[i]);
         listAsteroid[i].acc = null;
-        // printf("   {%d} : a : %g\n", i, listAsteroid[i].semiMajorAxis);
-        // printf("         e : %g\n", listAsteroid[i].eccentricity);
-        // printf("         w : %g\n", listAsteroid[i].trueLongitude);
-        // printf("         pos: {%g ; %g}\n", listAsteroid[i].pos.x, listAsteroid[i].pos.y);
-        // printf("         vel: {%g ; %g}\n", listAsteroid[i].vel.x, listAsteroid[i].vel.y);
-        // printf("         acc: {%g ; %g}\n", listAsteroid[i].acc.x, listAsteroid[i].acc.y);
-
-        // kepler_from_state(sun, &listAsteroid[i]);
-        // printf("KEPLER FROM STATE\n");
-        // printf("   {%d} : a : %g\n", i, listAsteroid[i].semiMajorAxis);
-        // printf("         e : %g\n", listAsteroid[i].eccentricity);
-        // printf("         w : %g\n", listAsteroid[i].trueLongitude);
-        // printf("         pos: {%g ; %g}\n", listAsteroid[i].pos.x, listAsteroid[i].pos.y);
-        // printf("         vel: {%g ; %g}\n", listAsteroid[i].vel.x, listAsteroid[i].vel.y);
-        // printf("         acc: {%g ; %g}\n", listAsteroid[i].acc.x, listAsteroid[i].acc.y);
 
     }
 };
