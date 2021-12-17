@@ -21,27 +21,16 @@ static Vector get_acceleration(Body body, int nbMajorBodies, Body listMajorBodie
     double r2;
     double a;
 
-    // printf("   => FUNCTION\n");
-    // printf("      Acc ini = {%g ; %g}\n", acceleration.x, acceleration.y);
-    // printf("      Nb major bodies : {%d}\n", nbMajorBodies);
-    // printf("      Position : {%g ; %g}\n", body.pos.x, body.pos.y);
-
     for (int i = 0 ; i < nbMajorBodies ; i++) {
         relativePosition.x = body.pos.x - listMajorBodies[i].pos.x;
         relativePosition.y = body.pos.y - listMajorBodies[i].pos.y;
-        // printf("      =Body {%d} :  position {%g ; %g}\n",i, listMajorBodies[i].pos.x, listMajorBodies[i].pos.y);
-        // printf("                   relative {%g ; %g}\n", relativePosition.x, relativePosition.y);
-        // printf("                   std para {%g}\n", listMajorBodies[i].std);
         r2 = relativePosition.x * relativePosition.x + relativePosition.y * relativePosition.y;
+
         a  = listMajorBodies[i].std / (r2 * sqrt(r2));
-        // printf("                   r2 = %g\n", r2);
-        // printf("                   a  = %g\n", a);
 
         if (r2 != 0) {
             acceleration.x -= relativePosition.x * a;
             acceleration.y -= relativePosition.y * a;
-                    // printf("                   accelera {%g ; %g}\n",acceleration.x, acceleration.y);
-
         }
     }
 
@@ -228,14 +217,14 @@ void kepler_from_state(Body sun, Body *body) {
     body->eccentricity  = e;
     body->trueLongitude = w;
 
-    double rp, ra;
-    rp = a * (1 - e);
-    ra = a * (1 + e);
+    // double rp, ra;
+    // rp = a * (1 - e);
+    // ra = a * (1 + e);
 
-    if (rp <= 1.666 || ra >= 4.951) {
-            body->eccentricity = 1;
-            body->isTooFar = 1;
-    }
+    // if (rp <= 1.666 || ra >= 4.951) {
+    //         body->eccentricity = 1;
+    //         body->isTooFar = 1;
+    // }
 
     // printf("       a: {%g}\n", body->semiMajorAxis);
     // printf("       e: {%g}\n", body->eccentricity);
