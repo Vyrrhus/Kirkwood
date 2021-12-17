@@ -10,8 +10,8 @@
 /***** FILE NAME */
 static char* INPUT_BODIES     = "input/saturn.dat";
 static char* INPUT_ASTEROID   = "input/asteroids.dat";
-static char* OUTPUT_FILENAME  = "output/%dMB_%drev_%dast.dat";
-static char* HIST_FILENAME    = "output/%dMB_%drev_%dast-hist.dat";
+static char* OUTPUT_FILENAME  = "output3d/%dMB_%drev_%dast.dat";
+static char* HIST_FILENAME    = "output3d/%dMB_%drev_%dast-hist.dat";
 
 /***** FUNCTIONS */
 // Static functions
