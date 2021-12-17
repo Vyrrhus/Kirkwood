@@ -19,7 +19,7 @@ else:
     filename = DEFAULT_FILE
 
 # Read file
-datafile    = open('output/'+filename+'.dat', 'r')
+datafile    = open('output3d/'+filename+'.dat', 'r')
 reader      = csv.reader(datafile)
 lines       = [line for line in reader]
 
