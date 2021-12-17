@@ -36,6 +36,8 @@ if '--hist' in sys.argv:
     dataErased = dataUnfiltered[(dataUnfiltered[:,4] >= 1.0) & (dataUnfiltered[:,3] < 9)]
     # data = dataUnfiltered[np.where(dataUnfiltered[:,4] >= 1.0, False, True)]
     # data = data[np.where(data[:,3] > 9,  False, True)]
+    ini = {"SMA": data[:,0], "ecc": data[:,1], "i": data[:,2], "W": data[:,3], "w": data[:,4]}
+    end = {"SMA": data[:,5], "ecc": data[:,6], "i": data[:,7], "W": data[:,8], "w": data[:,9]}
     """
         Format of -hist.dat files should be:
         {a(t=0), e(t=0), w(t=0), a(t=tmax), e(t=tmax), w(t=tmax)}
@@ -45,6 +47,7 @@ if '--hist' in sys.argv:
     figHist, axHist = plt.subplots(figsize=(12,5))
     figSMA_ECC, axSMA_ECC = plt.subplots()
     figSMA_LON, axSMA_LON = plt.subplots()
+    figSMA_INC, axSMA_INC = plt.subplots()
 
     # HISTOGRAM
     # Bins width or amount
@@ -56,7 +59,7 @@ if '--hist' in sys.argv:
         binsWidth = (min(data[:,3]) + max(data[:,3])) / bins
     
     # Histograms
-    axHist.hist(data[:,3],bins, color='steelblue', edgecolor='k', lw=0.3) # Final distribution
+    axHist.hist(end["SMA"],bins, color='steelblue', edgecolor='k', lw=0.3) # Final distribution
     # axHist.hist(data[:,0],bins, color='green', alpha=0.2) # Initial distribution
 
     # Resonances
@@ -78,14 +81,14 @@ if '--hist' in sys.argv:
     marsApoapsis     = 1.666
     jupiterPeriapsis = 4.951
 
-    axSMA_ECC.plot(data[:,3], data[:,4],'k.',ms=1)
+    axSMA_ECC.plot(end["SMA"], end["ecc"],'k.',ms=1)
 
     if '--div' in sys.argv:
         figDiv, axDiv = plt.subplots()
-        axDiv.plot(data[:,0], data[:,1],'g.',ms=1)
+        axDiv.plot(ini["SMA"], ini["ecc"],'g.',ms=1)
         axDiv.plot(dataErased[:,0], dataErased[:,1],'r.',ms=1, alpha=0.5)
     else:
-        axSMA_ECC.plot(data[:,0], data[:,1],'g.',ms=1, alpha=0.5)
+        axSMA_ECC.plot(ini["SMA"], ini["ecc"],'g.',ms=1, alpha=0.5)
         axSMA_ECC.plot(dataErased[:,0], dataErased[:,1],'r.',ms=1, alpha=0.5)
 
 
@@ -117,8 +120,8 @@ if '--hist' in sys.argv:
 
     if '--r' in sys.argv:
         figR, axR = plt.subplots()
-        rp = data[:,3] * (1 - data[:,4])
-        ra = data[:,3] * (1 + data[:,4])
+        rp = end["SMA"] * (1 - end["ecc"])
+        ra = end["SMA"] * (1 + end["ecc"])
         axR.plot(rp, ra,'k.',ms=1)
         axR.axvline(x=marsApoapsis, color='red', ls='-', lw=1, label='Mars apoapsis')
         axR.axhline(y=jupiterPeriapsis, color='blue', ls='-', lw=1, label='Jupiter periapsis')
@@ -135,10 +138,17 @@ if '--hist' in sys.argv:
 
 
     # a(w)
-    axSMA_LON.plot(data[:,5], data[:,3],'.',ms=1)
+    axSMA_LON.plot(end["w"], end["SMA"],'.',ms=1)
 
     axSMA_LON.set_title('a(w)')
     axSMA_LON.set_xlabel('True longitude of perihelion [rad]')
     axSMA_LON.set_ylabel('Semi-major axis [UA]')
+
+    # a(i)
+    axSMA_INC.plot(end["i"], end["SMA"], '.', ms=1)
+
+    axSMA_INC.set_title('a(i)')
+    axSMA_INC.set_xlabel('Inclination [rad]')
+    axSMA_INC.set_ylabel('Semi-major axis [UA]')
 
 plt.show()
