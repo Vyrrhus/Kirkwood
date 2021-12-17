@@ -32,8 +32,10 @@ int main() {
     sun = init_input(nbMajorBodies, majorBodies, asteroids);
 
     // Initiate output file
-    init_outputFile(nbMajorBodies);
-    save(time, nbMajorBodies, majorBodies, asteroids, sun);
+    if (SAVE_BOOL) {
+        init_outputFile(nbMajorBodies);
+        save(time, nbMajorBodies, majorBodies, asteroids, sun);
+    }
 
     // Run simulation
     sun = run_simulation(&time, nbMajorBodies, majorBodies, asteroids);
