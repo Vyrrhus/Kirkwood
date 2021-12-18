@@ -5,9 +5,9 @@
     #define ASTEROID_NUMBER 10000
     #define JUPITER_REV     10000
 
-    #define STEP_TIME       0.1
     #define STEP_WRITING    1.
     #define SAVE_BOOL       0       // True (1) or False (0)
+    #define STEP_TIME       0.01
     #define SAVE_HIST       0       // Idem
 
     /***** ASTEROID SEMI MAJOR AXIS GENERATION */
