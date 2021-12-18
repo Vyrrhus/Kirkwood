@@ -29,15 +29,19 @@ tmax = round(int(argFiles[1]) * 11.87)
 # Store data
 if '--hist' in sys.argv:
     hist_name = FORMAT_FILE.format(*argFiles)+'-hist.dat'
-    dataUnfiltered = np.genfromtxt(hist_name, delimiter=',')
+    data = np.genfromtxt(hist_name, delimiter=',')
+
+    ini = {"SMA": data[:,0], "ecc": data[:,1], "i": data[:,2], "W": data[:,3], "w": data[:,4]}
 
     # Filter the asteroids on a hyperbolic trajectory or too far from the Sun
-    data = dataUnfiltered[(dataUnfiltered[:,4] < 1.0) & (dataUnfiltered[:,3] <= 9)]
-    dataErased = dataUnfiltered[(dataUnfiltered[:,4] >= 1.0) & (dataUnfiltered[:,3] < 9)]
+    dataErased = data[(data[:,6] >= 1.0) & (data[:,5] < 15)]
+    data = data[(data[:,6] < 1.0) & (data[:,5] <= 15)]
+
+    end = {"SMA": data[:,5], "ecc": data[:,6], "i": data[:,7], "W": data[:,8], "w": data[:,9]}
+    
     # data = dataUnfiltered[np.where(dataUnfiltered[:,4] >= 1.0, False, True)]
     # data = data[np.where(data[:,3] > 9,  False, True)]
-    ini = {"SMA": data[:,0], "ecc": data[:,1], "i": data[:,2], "W": data[:,3], "w": data[:,4]}
-    end = {"SMA": data[:,5], "ecc": data[:,6], "i": data[:,7], "W": data[:,8], "w": data[:,9]}
+
     """
         Format of -hist.dat files should be:
         {a(t=0), e(t=0), w(t=0), a(t=tmax), e(t=tmax), w(t=tmax)}
@@ -86,12 +90,10 @@ if '--hist' in sys.argv:
     if '--div' in sys.argv:
         figDiv, axDiv = plt.subplots()
         axDiv.plot(ini["SMA"], ini["ecc"],'g.',ms=1)
-        axDiv.plot(dataErased[:,0], dataErased[:,1],'r.',ms=1, alpha=0.5)
+        axDiv.plot(dataErased[:,0], dataErased[:,1],'r.',ms=1)
     else:
-        axSMA_ECC.plot(ini["SMA"], ini["ecc"],'g.',ms=1, alpha=0.5)
-        axSMA_ECC.plot(dataErased[:,0], dataErased[:,1],'r.',ms=1, alpha=0.5)
-
-
+        axSMA_ECC.plot(ini["SMA"], ini["ecc"],'g.',ms=1, alpha=0.8)
+        axSMA_ECC.plot(dataErased[:,0], dataErased[:,1],'r.',ms=1, alpha=0.8)
 
     # Asteroid periapsis in Mars range isoclines
     """
