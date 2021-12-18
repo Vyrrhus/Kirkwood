@@ -45,52 +45,28 @@ Body leapfrog(int nbMajorBodies, Body listMajorBodies[], Body listAsteroids[], d
     Vector acc = {0, 0};
     Body sun;
 
-    // printf("\nLEAPFROG\n");
-
     // Position at t+dt
-    // printf("ASTEROIDS\n");
     for (int i = 0 ; i < ASTEROID_NUMBER ; i++) {
-        // printf("%d : %g, %g\n", i, listAsteroids[i].pos.x, listAsteroids[i].pos.y);
-        // printf("---- %g, %g\n", listAsteroids[i].vel.x, listAsteroids[i].vel.y);
-        // printf("---- %g, %g\n", listAsteroids[i].acc.x, listAsteroids[i].acc.y);
-
         listAsteroids[i].pos.x += listAsteroids[i].vel.x * dT + 0.5 * listAsteroids[i].acc.x * dT * dT;
         listAsteroids[i].pos.y += listAsteroids[i].vel.y * dT + 0.5 * listAsteroids[i].acc.y * dT * dT;
-        // printf("=new: %g, %g\n", listAsteroids[i].pos.x, listAsteroids[i].pos.y);
     }
-    // printf("MAJOR BODIES\n");
     for (int i = 0 ; i < nbMajorBodies ; i++) {
-        // printf("%d : %g, %g\n", i, listMajorBodies[i].pos.x, listMajorBodies[i].pos.y);
-        // printf("---- %g, %g\n", listMajorBodies[i].vel.x, listMajorBodies[i].vel.y);
-        // printf("---- %g, %g\n", listMajorBodies[i].acc.x, listMajorBodies[i].acc.y);
-
         listMajorBodies[i].pos.x += listMajorBodies[i].vel.x * dT + 0.5 * listMajorBodies[i].acc.x * dT * dT;
         listMajorBodies[i].pos.y += listMajorBodies[i].vel.y * dT + 0.5 * listMajorBodies[i].acc.y * dT * dT;
-        // printf("=new: %g, %g\n", listMajorBodies[i].pos.x, listMajorBodies[i].pos.y);
     }
 
     // Velocity and acceleration at t+dt
-    // printf("ASTEROIDS\n");
     for (int i = 0 ; i < ASTEROID_NUMBER ; i++) {
-        // printf("== nb {%d}", i);
         acc = get_acceleration(listAsteroids[i], nbMajorBodies, listMajorBodies);
-        // printf("%d : %g, %g\n", i, listAsteroids[i].vel.x, listAsteroids[i].vel.y);
-        // printf("   acc: {%g ; %g}\n", acc.x, acc.y);
         listAsteroids[i].vel.x += 0.5 * (listAsteroids[i].acc.x + acc.x) * dT;
         listAsteroids[i].vel.y += 0.5 * (listAsteroids[i].acc.y + acc.y) * dT;
         listAsteroids[i].acc = acc;
-        // printf("---- %g, %g\n", listAsteroids[i].vel.x, listAsteroids[i].vel.y);
     }
-    // printf("MAJOR BODIES\n");
     for (int i = 0 ; i < nbMajorBodies ; i++) {
-        // printf("== nb {%d}", i);
         acc = get_acceleration(listMajorBodies[i], nbMajorBodies, listMajorBodies);
-        // printf("%d : %g, %g\n", i, listMajorBodies[i].vel.x, listMajorBodies[i].vel.y);
-        // printf("   acc: {%g ; %g}\n", acc.x, acc.y);
         listMajorBodies[i].vel.x += 0.5 * (listMajorBodies[i].acc.x + acc.x) * dT;
         listMajorBodies[i].vel.y += 0.5 * (listMajorBodies[i].acc.y + acc.y) * dT;
         listMajorBodies[i].acc = acc;
-        // printf("---- %g, %g\n", listMajorBodies[i].vel.x, listMajorBodies[i].vel.y);
 
         if (listMajorBodies[i].std == STD_SUN) {
             sun = listMajorBodies[i];
@@ -105,6 +81,7 @@ Body yoshida(int nbMajorBodies, Body listMajorBodies[], Body listAsteroids[], do
      */
     Vector acc = {0, 0};
 
+    // Constants for Yoshida steps
     double a = pow(2, (double) 1/3);
     double W0 = - a / (2 - a);
     double W1 =   1 / (2 - a);
@@ -115,7 +92,7 @@ Body yoshida(int nbMajorBodies, Body listMajorBodies[], Body listAsteroids[], do
     for (int step = 0 ; step < 4 ; step++) {
         // Position
         for (int i = 0 ; i < ASTEROID_NUMBER ; i++) {
-            if (listAsteroids[i].isTooFar) {
+            if (listAsteroids[i].stop_simu) {
                 continue;
             }
             listAsteroids[i].pos.x += c[step] * listAsteroids[i].vel.x * dT;
@@ -133,7 +110,7 @@ Body yoshida(int nbMajorBodies, Body listMajorBodies[], Body listAsteroids[], do
 
         // Velocity and acceleration
         for (int i = 0 ; i < ASTEROID_NUMBER ; i++) {
-            if (listAsteroids[i].isTooFar) {
+            if (listAsteroids[i].stop_simu) {
                 continue;
             }
             acc = get_acceleration(listAsteroids[i], nbMajorBodies, listMajorBodies);
@@ -161,13 +138,7 @@ Body yoshida(int nbMajorBodies, Body listMajorBodies[], Body listAsteroids[], do
 void kepler_from_state(Body sun, Body *body) {
     /*  Compute kepler elements (a, e, w) from state vectors (position, velocity)
      */
-    double a, e, w, energy;
     double sunStdParameter = (double) STD_SUN;
-
-    // printf("BODY STD : {%g}\n", body->std);
-    // printf("     pos: {%g ; %g}\n", body->pos.x, body->pos.y);
-    // printf("     vel: {%g ; %g}\n", body->vel.x, body->vel.y);
-
 
     // Relative state vectors to the Sun
     Vector relPos = {body->pos.x - sun.pos.x, 
@@ -179,63 +150,50 @@ void kepler_from_state(Body sun, Body *body) {
     double r2 = relPos.x * relPos.x + relPos.y * relPos.y;
     double v2 = relVel.x * relVel.x + relVel.y * relVel.y;
 
-    // printf("== r2 = %g\n", r2);
-    // printf("SUN pos: {%g ; %g}\n", sun.pos.x, sun.pos.y);
-    // printf("BODYpos: {%g ; %g}\n", body->pos.x, body->pos.y);
     // Sun
     if (r2 == 0) {
         return;
     }
+    double rNorm = sqrt(r2);
 
-    // Orbital momentum
+    // Orbital momentum vector : h = r^v
     double h = relPos.x * relVel.y - relPos.y * relVel.x;
 
-    // Eccentricity vector
-    Vector ecc = {(relVel.y * h) / sunStdParameter - relPos.x / sqrt(r2),
-                 -(relVel.x * h) / sunStdParameter - relPos.y / sqrt(r2)};
+    // Eccentricity vector : e = v^h / std - r / |r|
+    Vector e = { (relVel.y * h) / sunStdParameter - relPos.x / rNorm,
+                -(relVel.x * h) / sunStdParameter - relPos.y / rNorm};
+    double eNorm = sqrt(e.x * e.x + e.y * e.y);
     
-    // Mechanical specific energy, semi-major axis & eccentricity
-    energy  = v2 / 2 - STD_SUN / sqrt(r2);
-    a       = - STD_SUN / (2 * energy);
-    e       = sqrt(ecc.x * ecc.x + ecc.y * ecc.y);
+    // Mechanical specific energy & semi-major axis (given eNorm != 1)
+    double energy = v2 / 2 - sunStdParameter / rNorm;
+    double semiMA = - sunStdParameter / (2 * energy);
 
-    // True longitude for near-circular orbit
-    if (e < 1e-6) {
-        w = acos(relPos.x / sqrt(r2));
-        if (relPos.y > 0) {
-            w = 2 * M_PI - w;
-        }
-    } else {
-    // ... for non-circular orbit
-        w = acos(ecc.x / e);
-        if (ecc.y < 0) {
-            w = 2 * M_PI - w;
-        }
+    // True longitude of periapsis (special case because i = 0°)
+    double w;
+    double wTrue  = acos(e.x / eNorm);
+    if (e.y < 0) {
+        wTrue = 2 * M_PI - wTrue;
     }
 
-    body->semiMajorAxis = a;
-    body->eccentricity  = e;
+    // Elliptical equatorial orbit
+    if (eNorm > 1e-6) {
+        w = wTrue;
+    } else {
+    // Circular equatorial orbit
+        w = 0;
+    }
+
+    body->semiMajorAxis = semiMA;
+    body->eccentricity  = eNorm;
     body->trueLongitude = w;
-
-    // double rp, ra;
-    // rp = a * (1 - e);
-    // ra = a * (1 + e);
-
-    // if (rp <= 1.666 || ra >= 4.951) {
-    //         body->eccentricity = 1;
-    //         body->isTooFar = 1;
-    // }
-
-    // printf("       a: {%g}\n", body->semiMajorAxis);
-    // printf("       e: {%g}\n", body->eccentricity);
-    // printf("       w: {%g}\n", body->trueLongitude);
-
 };
 void state_from_kepler(Body sun, Body *body) {
-    /*  Compute state vectors (pos, vel) from Kepler elements (a, e, w).
+    /*  Compute state vectors (pos, vel) from Kepler elements (a, e, w)
+     *  We assume the true anomaly is 0 (ie the body is defined at its periapsis)
      */
-    double a, e, w, r, v;
+    double a, e, w;
     double cosw, sinw;
+    double std = (double) STD_SUN;
 
     a = body->semiMajorAxis;
     e = body->eccentricity;
@@ -245,14 +203,22 @@ void state_from_kepler(Body sun, Body *body) {
     sinw = sin(w);
 
     // Distance & velocity relative to the Sun
-    // r = a * (1 - e * e) / (1 + e);                  // équivalent
-    // v = sqrt(STD_SUN / a / (1 - e * e)) * (1 + e);  // équivalent
-    r = a * (1 - e);                                // est équivalent
-    v = sqrt(STD_SUN * a * (1 - e * e)) / r;        // idem
+    double r = a * (1 - e);
+    double v = sqrt(std / (a * (1 - e*e))) * (1 + e);
 
-    // State vectors
-    body->pos.x =  r * cosw + sun.pos.x;
-    body->pos.y =  r * sinw + sun.pos.y;
-    body->vel.x = -v * sinw + sun.vel.x;
-    body->vel.y =  v * cosw + sun.vel.y;
+    // Relative state vectors to the Sun
+    Vector pos = {r * cosw,
+                  r * sinw};
+    Vector vel = {v * (- sinw),
+                  v * cosw};
+    
+    // True state vectors
+    pos.x += sun.pos.x;
+    pos.y += sun.pos.y;
+
+    vel.x += sun.vel.x;
+    vel.y += sun.vel.y;
+
+    body->pos = pos;
+    body->vel = vel;
 };

@@ -33,139 +33,101 @@ nbObjs  = int(header.pop(0))
 nbArgs  = len(header[1::])
 
 # Fill arrays
-data = {el:np.zeros((nbLines, nbObjs)) for el in header[1::]}
-data['time'] = np.zeros(nbLines)
+idList = []
+for i in range(nbObjs):
+    idList.append(str(lines[0][1+i*(1+nbArgs)]))
+nbIniObjs = len(idList)
+data = {nb:{el: [] for el in header[1::]} for nb in idList}
+time = np.zeros(nbLines)
 
 for i in range(nbLines):
     line = lines[i]
-    data['time'][i] = line.pop(0)
-    for j in range(nbObjs):
-        k = 1
-        # print('Obj n°', j)
-        for el in header[1::]:
-            data[el][i,j] = line[j*(nbArgs+1)+k]
-            k+=1
+    time[i] = line.pop(0)
+    for j in range(1,nbArgs+1):
+        el = header[j]
+        for k in range(0,nbObjs):
+            try:
+                nb = line[k*(nbArgs+1)]
+            except:
+                nbObjs -= 1
+                continue
+            data[nb][el].append(line[j+k*(nbArgs+1)])
 
-def kepler(x,y,vx,vy):
-    # Constantes
-    AU_CONST = 149597870700
-    YR_CONST = 86400 * 365.2524
-    GM_CONST = 1.32712440018e+020
-    GM = GM_CONST * YR_CONST**2 / AU_CONST**3
+for i in range(nbIniObjs):
+    for el in header[1::]:
+        data[idList[i]][el] = np.array(data[idList[i]][el]).astype(float)
 
-    # Elements
-    r2 =  x**2 +  y**2
-    v2 = vx**2 + vy**2
-    if not np.all(r2):
-        return (np.zeros_like(x), np.zeros_like(x))
-    h  = x * vy - y * vx # orbital momentum vector
-    eV = [(vy * h) / GM - x / np.sqrt(r2),
-        - (vx * h) / GM - y / np.sqrt(r2)]
-    e  = np.sqrt(eV[0]**2 + eV[1]**2)
-    a  = 1 / (2/np.sqrt(r2) - v2/GM)
-    return (a,e)
+print("Data loaded")
 
 # Figures
 """
-    - position + norme (distance)
-    - vitesse  + norme (vitesse relative)
-    - elements : a(t), e(t), w(t), E(t) 
+    - position
+    - velocity
+    - elements : a(t), e(t), w(t)
 """
 from matplotlib import pyplot as plt
 
-state       = '--state'     in sys.argv
-norm        = '--norm'      in sys.argv
+position    = '--pos'       in sys.argv
+velocity    = '--vel'       in sys.argv
 elements    = '--elements'  in sys.argv
-recompute   = '--recompute' in sys.argv
-phase       = '--phase'     in sys.argv
-hist        = '--hist'      in sys.argv
-hide        = '--hide'      in sys.argv
-if hide:
-    START = 2
-else:
-    START = 0
 
 # Figures and axes
-if state:
+if position:
     figPos, axPos = plt.subplots()
-    plt.suptitle("Position y(x) [AU]")
+    plt.suptitle("Trajectory on the ecliptic frame")
     axPos.axis('equal')
+    axPos.set_xlabel('x [AU]')
+    axPos.set_ylabel('y [AU]')
+
+if velocity:
     figVel, axVel = plt.subplots()
-    plt.suptitle("Velocity Vy(Vx) [AU/year]")
+    plt.suptitle("Velocity on the ecliptic frame")
     axVel.axis('equal')
-
-if phase and norm:
-    figPhase, axPhase = plt.subplots()
-    plt.suptitle("Espace des phases (v(r))")
-    axPhase.axis('equal')
-
-if norm:
-    figDist, axDist = plt.subplots()
-    plt.suptitle("Distance to Sun [AU]")
-    figRelV, axRelV = plt.subplots()
-    plt.suptitle("Relative velocity to Sun [AU/year]")
+    axVel.set_xlabel('Vx [AU/year]')
+    axVel.set_ylabel('Vy [AU/year]')
 
 if elements:
-    k = 1
-    if recompute:
-        k = 2
-    figA, axA = plt.subplots(k,1)
-    plt.suptitle("Semi-major axis [AU]")
-    figE, axE = plt.subplots(k,1)
+    figSMA, axSMA = plt.subplots()
+    plt.suptitle("Semi-major axis")
+    axSMA.set_ylabel('semi-major axis [AU]')
+
+    figEcc, axEcc = plt.subplots()
     plt.suptitle("Eccentricity")
-    # figW, axW = plt.subplots(k,1, subplot_kw={'projection': 'polar'})
-    # plt.suptitle("True longitude to perihelion [rad]")
+    axEcc.set_ylabel("eccentricity []")
 
-if hist:
-    figHist, axHist = plt.subplots()
-    # plt.suptitle('True semi-major axis histogram, {} asteroids (t=0, t={})'.format(filename.split('rev')[0], filename.split('_')[1][:-3]))
-    figAE, axAE = plt.subplots()
+    figArg, axArg = plt.subplots()
+    plt.suptitle("True longitude of periapsis")
+    axArg.set_ylabel("w [°]")
 
+    for ax in [axSMA, axEcc, axArg]:
+        ax.set_xlabel("time [year]")
 
 # Plot
-for obj in range(START,nbObjs):
-    if state:
-        axPos.plot(data ['x'][:,obj], data ['y'][:,obj], '-')
-        axVel.plot(data['vx'][:,obj], data['vy'][:,obj], '-')
-    if norm:
-        r2 = (data ['x'][:,obj] -  data['x'][:,0])**2 + (data ['y'][:,obj] - data ['y'][:,0])**2
-        v2 = (data['vx'][:,obj] - data['vx'][:,0])**2 + (data['vy'][:,obj] - data['vy'][:,0])**2
-        axDist.plot(data['time'], np.sqrt(r2))
-        axRelV.plot(data['time'], np.sqrt(v2))
-        if phase:
-            axPhase.plot(np.sqrt(r2), np.sqrt(v2))
-    if elements and not recompute:
-        axA.plot(data['time'], data['semi-major axis'][:,obj])
-        axE.plot(data['time'], data['eccentricity'][:,obj])
-        # axW.plot(data['time'], data['true longitude'][:,obj])
-    if elements and recompute:
-        axA[0].plot(data['time'], data['semi-major axis'][:,obj])
-        axE[0].plot(data['time'], data['eccentricity'][:,obj])
-        # axW[0].plot(data['time'], data['true longitude'][:,obj])
+for id in idList:
+    body = data[id]
+    if position:
+        axPos.plot(body['x'], body['y'], '.')
+    if velocity:
+        axVel.plot(body['vx'], body['vy'], '.')
+    if elements:
+        if (id == '-1'):
+            name = 'Sun'
+        elif (id == '-2'):
+            name = 'Jupiter'
+        elif (id == '-3'):
+            name = 'Mars'
+        elif (id == '-4'):
+            name = 'Saturn'
+        else:
+            name = ''
+        size = len(body[list(body.keys())[0]])
+        t = time[:size]
+        axSMA.plot(t, body['semi-major axis'],label=name)
+        axEcc.plot(t, body['eccentricity'],label=name)
+        axArg.plot(t, body['true longitude'],label=name)
 
-        # Recompute
-        a,e = kepler( data['x'][:,obj] -  data['x'][:,0],
-                      data['y'][:,obj] -  data['y'][:,0],
-                     data['vx'][:,obj] - data['vx'][:,0],
-                     data['vy'][:,obj] - data['vy'][:,0])
-        axA[1].plot(data['time'], a)
-        axE[1].plot(data['time'], e)
-    
-if hist:
-    # Read file
-    datahist   = open('output/'+filename+'.dat', 'r')
-    reader      = csv.reader(datafile)
-    lines       = [line for line in reader] 
-    i = sys.argv.index('--hist')
-    try:
-        bins = int(sys.argv[i+1])
-    except:
-        bins = 50
-    axHist[0].hist(180/np.pi*data['semi-major axis'][0,2:], bins)
-    axHist[1].hist(180/np.pi*data['semi-major axis'][-1,2:], bins)
-    axHist[0].set_xlim(0, 360.)
-    axHist[1].set_xlim(0, 360.)
-    axHist[1].annotate('{} bins'.format(bins), xy=(0.9,0.9), xycoords='figure fraction')
-    plt.savefig("img/histo_SEMIMAJORAXIS_{}.png".format(bins, filename[:-4]))
+if elements:
+    for ax in [axSMA,axEcc,axArg]:
+        ax.legend()
 
 plt.show()

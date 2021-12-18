@@ -32,13 +32,18 @@ int main() {
     sun = init_input(nbMajorBodies, majorBodies, asteroids);
 
     // Initiate output file
-    init_outputFile(nbMajorBodies);
-    save(time, nbMajorBodies, majorBodies, asteroids, sun);
+    if (SAVE_BOOL) {
+        init_outputFile(nbMajorBodies);
+        save(time, nbMajorBodies, majorBodies, asteroids, sun);
+    }
 
     // Run simulation
     sun = run_simulation(&time, nbMajorBodies, majorBodies, asteroids);
 
-    save_hist(nbMajorBodies, sun, asteroids);
+    // Save initial and final Kepler elements for the asteroids
+    if (SAVE_HIST) {
+        save_hist(nbMajorBodies, sun, asteroids);
+    }
     
     return 0;
 }
@@ -65,8 +70,7 @@ static Body run_simulation(double *time, int nbMajorBodies, Body listMajorBodies
            stop  = 1;
        }
 
-       // Iteration
-    //    sun = leapfrog(nbMajorBodies, listMajorBodies, listAsteroids, (double) STEP_TIME);
+       // Iteration (choose either leapfrog or yoshida)
        sun = yoshida(nbMajorBodies, listMajorBodies, listAsteroids, (double) STEP_TIME);
 
        // Save data

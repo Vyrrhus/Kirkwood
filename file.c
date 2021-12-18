@@ -33,33 +33,17 @@ static void init_asteroid(Body sun, Body listAsteroid[]) {
         exit(EXIT_FAILURE);
     }
 
-    // printf("ASTEROID INIT\n");
     for (int i = 0 ; i < ASTEROID_NUMBER ; i++) {
         fscanf(datafile, "%d,%lf,%lf,%lf\n",
                &id,
                &listAsteroid[i].semiMajorAxis,
                &listAsteroid[i].eccentricity,
                &listAsteroid[i].trueLongitude);
+
         state_from_kepler(sun, &listAsteroid[i]);
-        listAsteroid[i].acc = null;
-        listAsteroid[i].isTooFar = 0;
-
-        // printf("   {%d} : a : %g\n", i, listAsteroid[i].semiMajorAxis);
-        // printf("         e : %g\n", listAsteroid[i].eccentricity);
-        // printf("         w : %g\n", listAsteroid[i].trueLongitude);
-        // printf("         pos: {%g ; %g}\n", listAsteroid[i].pos.x, listAsteroid[i].pos.y);
-        // printf("         vel: {%g ; %g}\n", listAsteroid[i].vel.x, listAsteroid[i].vel.y);
-        // printf("         acc: {%g ; %g}\n", listAsteroid[i].acc.x, listAsteroid[i].acc.y);
-
-        // kepler_from_state(sun, &listAsteroid[i]);
-        // printf("KEPLER FROM STATE\n");
-        // printf("   {%d} : a : %g\n", i, listAsteroid[i].semiMajorAxis);
-        // printf("         e : %g\n", listAsteroid[i].eccentricity);
-        // printf("         w : %g\n", listAsteroid[i].trueLongitude);
-        // printf("         pos: {%g ; %g}\n", listAsteroid[i].pos.x, listAsteroid[i].pos.y);
-        // printf("         vel: {%g ; %g}\n", listAsteroid[i].vel.x, listAsteroid[i].vel.y);
-        // printf("         acc: {%g ; %g}\n", listAsteroid[i].acc.x, listAsteroid[i].acc.y);
-
+        listAsteroid[i].acc       = null;
+        listAsteroid[i].std       = 0.;
+        listAsteroid[i].stop_simu = 0;
     }
 };
 static Body init_major_bodies(int nbMajorBodies, Body listMajorBodies[]) {
@@ -74,31 +58,34 @@ static Body init_major_bodies(int nbMajorBodies, Body listMajorBodies[]) {
         exit(EXIT_FAILURE);
     }
 
+    // Major bodies are declared with format string:
+    // {name,std,x,y,z,vx,vy,vz}
     for (int i = 0 ; i < nbMajorBodies ; i++) {
-        fscanf(datafile, "%[^,],%lf,%lf,%lf,%lf,%lf",
-               &name,
-               &listMajorBodies[i].std,
-               &listMajorBodies[i].pos.x,
-               &listMajorBodies[i].pos.y,
-               &listMajorBodies[i].vel.x,
-               &listMajorBodies[i].vel.y);
-        
-        if (i != nbMajorBodies-1) {
-            fscanf(datafile, "\n");
-        }
 
-        listMajorBodies[i].acc           = null;
-        listMajorBodies[i].std          *= GM_CONVERSION;
+        fscanf(datafile, "%[^,],%lf,%lf,%lf,%lf,%lf\n",
+                &name,
+                &listMajorBodies[i].std,
+                &listMajorBodies[i].pos.x,
+                &listMajorBodies[i].pos.y,
+                &listMajorBodies[i].vel.x,
+                &listMajorBodies[i].vel.y);
+        
         listMajorBodies[i].semiMajorAxis = 0;
         listMajorBodies[i].eccentricity  = 0;
         listMajorBodies[i].trueLongitude = 0;
-        listMajorBodies[i].isTooFar      = 0;
+        listMajorBodies[i].std          *= GM_CONVERSION;
+        listMajorBodies[i].acc           = null;
+        listMajorBodies[i].stop_simu     = 0;
 
-        if (listMajorBodies[i].std == STD_SUN) {
-            sun = listMajorBodies[i];
+        // Check if Sun is the first element
+        if (i == 0) {
+            sun = listMajorBodies[0];
+            if (sun.std != STD_SUN) {
+                exit(EXIT_FAILURE);
+            }
         }
+        kepler_from_state(sun, &listMajorBodies[i]);
     }
-
     return sun;
 };
 
@@ -121,8 +108,8 @@ void init_outputFile(int nbMajorBodies) {
     }
 
     // Set header
-    fprintf(datafile, "%d,id,x,y,vx,vy,semi-major axis,eccentricity,true longitude", ASTEROID_NUMBER + nbMajorBodies);
-    // fprintf(datafile, "%d,id,semi-major axis,eccentricity,true longitude", ASTEROID_NUMBER + nbMajorBodies);
+    // fprintf(datafile, "%d,id,x,y,vx,vy,semi-major axis,eccentricity,true longitude", ASTEROID_NUMBER + nbMajorBodies);
+    fprintf(datafile, "%d,id,semi-major axis,eccentricity,true longitude", ASTEROID_NUMBER + nbMajorBodies);
 
     fclose(datafile);
 };
@@ -147,26 +134,34 @@ void save(double time, int nbMajorBodies, Body listMajorBodies[], Body listAster
     // Add data for each major Body
     for (int i = 0 ; i < nbMajorBodies ; i++) {
         kepler_from_state(sun, &listMajorBodies[i]);
-        fprintf(datafile, ",%d,%.5e,%.5e,%.5e,%.5e,%.5e,%.5e,%.5e", -(i+1),
-                          listMajorBodies[i].pos.x, listMajorBodies[i].pos.y,
-                          listMajorBodies[i].vel.x, listMajorBodies[i].vel.y,
-                          listMajorBodies[i].semiMajorAxis, listMajorBodies[i].eccentricity, listMajorBodies[i].trueLongitude);
-        // fprintf(datafile, ",%d,%.5e,%.5e,%.5e", -(i+1), listMajorBodies[i].semiMajorAxis,
-        //                                                 listMajorBodies[i].eccentricity,
-        //                                                 listMajorBodies[i].trueLongitude);
+        // fprintf(datafile, ",%d,%.5e,%.5e,%.5e,%.5e,%.5e,%.5e,%.5e", -(i+1),
+        //                   listMajorBodies[i].pos.x, listMajorBodies[i].pos.y,
+        //                   listMajorBodies[i].vel.x, listMajorBodies[i].vel.y,
+        //                   listMajorBodies[i].semiMajorAxis, listMajorBodies[i].eccentricity, listMajorBodies[i].trueLongitude);
+        fprintf(datafile, ",%d,%.5e,%.5e,%.5e", -(i+1), listMajorBodies[i].semiMajorAxis,
+                                                        listMajorBodies[i].eccentricity,
+                                                        listMajorBodies[i].trueLongitude);
     }
 
     // Add data for each asteroid
     for (int i = 0 ; i < ASTEROID_NUMBER ; i++) {
-        kepler_from_state(sun, &listAsteroid[i]);
+        if (listAsteroid[i].stop_simu) {
+            continue;
+        }
 
-        fprintf(datafile, ",%d,%.5e,%.5e,%.5e,%.5e,%.5e,%.5e,%.5e", (i+1),
-                          listAsteroid[i].pos.x, listAsteroid[i].pos.y,
-                          listAsteroid[i].vel.x, listAsteroid[i].vel.y,
-                          listAsteroid[i].semiMajorAxis, listAsteroid[i].eccentricity, listAsteroid[i].trueLongitude);
-        // fprintf(datafile, ",%d,%.5e,%.5e,%.5e", (i+1), listAsteroid[i].semiMajorAxis,
-        //                                                listAsteroid[i].eccentricity,
-        //                                                listAsteroid[i].trueLongitude);
+        kepler_from_state(sun, &listAsteroid[i]);
+        if (listAsteroid[i].semiMajorAxis >= SMA_MAX_VALUE || listAsteroid[i].eccentricity >= ECC_MAX_VALUE) {
+            listAsteroid[i].stop_simu = 1;
+            continue;
+        }
+
+        // fprintf(datafile, ",%d,%.5e,%.5e,%.5e,%.5e,%.5e,%.5e,%.5e", (i+1),
+        //                   listAsteroid[i].pos.x, listAsteroid[i].pos.y,
+        //                   listAsteroid[i].vel.x, listAsteroid[i].vel.y,
+        //                   listAsteroid[i].semiMajorAxis, listAsteroid[i].eccentricity, listAsteroid[i].trueLongitude);
+        fprintf(datafile, ",%d,%.5e,%.5e,%.5e", (i+1), listAsteroid[i].semiMajorAxis,
+                                                       listAsteroid[i].eccentricity,
+                                                       listAsteroid[i].trueLongitude);
     }
 
     fclose(datafile);
@@ -197,14 +192,16 @@ void save_hist(int nbMajorBodies, Body sun, Body listAsteroid[]) {
     for (int i = 0 ; i < ASTEROID_NUMBER ; i++) {
         fscanf(inputFile, "%d,%lf,%lf,%lf\n",&id,&a,&e,&w);
 
-        if (listAsteroid[i].isTooFar) {
+        if (listAsteroid[i].stop_simu) {
             continue;
         }
+
         if (firstLine) {
             firstLine = 0;
         } else {
             fprintf(outputFile,"\n");
         }
+
         kepler_from_state(sun, &listAsteroid[i]);
         fprintf(outputFile,"%.5e,%.5e,%.5e,%.5e,%.5e,%.5e",
                             a,e,w,  listAsteroid[i].semiMajorAxis,
@@ -240,20 +237,20 @@ void generate_asteroid() {
          *      Eccentricity set to 0
          *      Random true longitude for periapsis between 0 and 2*Pi
          */
-        // semiMajorAxis = randfrom(MIN_AST_GENERATION, MAX_AST_GENERATION);
-        // eccentricity  = 0;
+        semiMajorAxis = randfrom(MIN_AST_GENERATION, MAX_AST_GENERATION);
+        eccentricity  = 0;
         // semiMajorAxis = (double) (i-1) / (double) (ASTEROID_NUMBER - 1) * (MAX_AST_GENERATION - MIN_AST_GENERATION) + MIN_AST_GENERATION;
-        r1 = randfrom(1.666, 4.951);
-        r2 = randfrom(1.666, 4.951);
-        if (r1 < r2) {
-            peri = r1;
-            apo  = r2;
-        } else {
-            peri = r2;
-            apo  = r1;
-        }
-        eccentricity  = (1 - peri/apo) / (1 + peri/apo);
-        semiMajorAxis = peri / (1 - eccentricity);
+        // r1 = randfrom(1.666, 4.951);
+        // r2 = randfrom(1.666, 4.951);
+        // if (r1 < r2) {
+        //     peri = r1;
+        //     apo  = r2;
+        // } else {
+        //     peri = r2;
+        //     apo  = r1;
+        // }
+        // eccentricity  = (1 - peri/apo) / (1 + peri/apo);
+        // semiMajorAxis = peri / (1 - eccentricity);
         trueLongitude = randfrom(0., 2*M_PI);
         
         // Save data
