@@ -47,9 +47,10 @@ static void init_asteroid(Body sun, Body listAsteroid[]) {
         listAsteroid[i].longitudeAN  *= RAD_CONVERSION;
         listAsteroid[i].argPeriapsis *= RAD_CONVERSION;
         state_from_kepler(sun, &listAsteroid[i]);
-        listAsteroid[i].acc = null;
-        listAsteroid[i].std = 0.;
+        listAsteroid[i].acc  = null;
+        listAsteroid[i].std  = 0.;
 
+        listAsteroid[i].stop_simu = 0;
     }
 };
 static Body init_major_bodies(int nbMajorBodies, Body listMajorBodies[]) {
@@ -78,7 +79,7 @@ static Body init_major_bodies(int nbMajorBodies, Body listMajorBodies[]) {
     listMajorBodies[0].argPeriapsis  = 0;
     listMajorBodies[0].std          *= GM_CONVERSION;
     listMajorBodies[0].acc           = null;
-        }
+    listMajorBodies[0].stop_simu     = 0;
 
     // Check if Sun is well declared
     sun = listMajorBodies[0];
@@ -103,10 +104,9 @@ static Body init_major_bodies(int nbMajorBodies, Body listMajorBodies[]) {
         listMajorBodies[i].argPeriapsis *= RAD_CONVERSION;
         listMajorBodies[i].std          *= GM_CONVERSION;
         listMajorBodies[i].acc           = null;
+        listMajorBodies[i].stop_simu     = 0;
 
         state_from_kepler(sun, &listMajorBodies[i]);
-
-        }
     }
     return sun;
 };
@@ -171,8 +171,15 @@ void save(double time, int nbMajorBodies, Body listMajorBodies[], Body listAster
 
     // Add data for each asteroid
     for (int i = 0 ; i < ASTEROID_NUMBER ; i++) {
-        kepler_from_state(sun, &listAsteroid[i]);
+        if (listAsteroid[i].stop_simu) {
+            continue;
+        }
 
+        kepler_from_state(sun, &listAsteroid[i]);
+        if (listAsteroid[i].semiMajorAxis >= SMA_MAX_VALUE || listAsteroid[i].eccentricity >= ECC_MAX_VALUE) {
+            listAsteroid[i].stop_simu = 1;
+            continue;
+        }
         // fprintf(datafile, ",%d,%.5e,%.5e,%.5e,%.5e,%.5e,%.5e,%.5e", (i+1),
         //                   listAsteroid[i].pos.x, listAsteroid[i].pos.y,
         //                   listAsteroid[i].vel.x, listAsteroid[i].vel.y,
@@ -214,11 +221,16 @@ void save_hist(int nbMajorBodies, Body sun, Body listAsteroid[]) {
     for (int i = 0 ; i < ASTEROID_NUMBER ; i++) {
         fscanf(inputFile, "%d,%lf,%lf,%lf,%lf,%lf\n",&id,&a,&e,&inc,&W,&w);
 
+        if (listAsteroid[i].stop_simu) {
+            continue;
+        }
+
         if (firstLine) {
             firstLine = 0;
         } else {
             fprintf(outputFile,"\n");
         }
+
         kepler_from_state(sun, &listAsteroid[i]);
         fprintf(outputFile,"%.5e,%.5e,%.5e,%.5e,%.5e,%.5e,%.5e,%.5e,%.5e,%.5e",
                       a,e,inc,W,w,  listAsteroid[i].semiMajorAxis,

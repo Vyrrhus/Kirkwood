@@ -38,6 +38,7 @@
     } Vector;
 
     typedef struct {
+        int stop_simu;
         Vector pos;
         Vector vel;
         Vector acc;
